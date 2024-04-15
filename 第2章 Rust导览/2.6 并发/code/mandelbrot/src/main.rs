@@ -118,7 +118,10 @@ fn test_pixel_to_point() {
             Complex { re: -1.0, im: 1.0 },
             Complex { re: 1.0, im: -1.0 }
         ),
-        Complex { re: -0.5, im: -0.75 }
+        Complex {
+            re: -0.5,
+            im: -0.75
+        }
     )
 }
 
@@ -130,7 +133,7 @@ fn render(
     pixels: &mut [u8],
     bounds: (usize, usize),
     upper_left: Complex<f64>,
-    lower_right: Complex<f64>
+    lower_right: Complex<f64>,
 ) {
     assert_eq!(pixels.len(), bounds.0 * bounds.1);
 
@@ -142,8 +145,31 @@ fn render(
             // 否则将其灰度值设为255减去`escape_time()`返回的次数
             pixels[row * bounds.0 + column] = match escape_time(point, 255) {
                 None => 0,
-                Some(count) => 255 - count as u8
+                Some(count) => 255 - count as u8,
             }
         }
     }
+}
+
+use image::png::PNGEncoder;
+use image::ColorType;
+use std::fs::File;
+
+/// 把`pixels`缓冲区(其尺寸由`bounds`给出)写入名为`filename`的文件中
+fn write_image(
+    filename: &str,
+    pixels: &[u8],
+    bounds: (usize, usize),
+) -> Result<(), std::io::Error> {
+    let output = File::create(filename)?;
+
+    let encoder = PNGEncoder::new(output);
+    encoder.encode(
+        &pixels,
+        bounds.0 as u32,
+        bounds.1 as u32,
+        ColorType::Gray(8),
+    )?;
+
+    Ok(())
 }
