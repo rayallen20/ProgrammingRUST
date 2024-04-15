@@ -121,3 +121,29 @@ fn test_pixel_to_point() {
         Complex { re: -0.5, im: -0.75 }
     )
 }
+
+/// 将曼德博集对应的矩形渲染到像素缓冲区中
+///
+/// `bounds`参数会给出缓冲区`pixels`的宽度和高度,该缓冲区中的每个字节都包含一个灰度像素
+/// `upper_left`和`lower_right`分别指定了复平面中对应于像素缓冲区左上角和右下角的点
+fn render(
+    pixels: &mut [u8],
+    bounds: (usize, usize),
+    upper_left: Complex<f64>,
+    lower_right: Complex<f64>
+) {
+    assert_eq!(pixels.len(), bounds.0 * bounds.1);
+
+    for row in 0..bounds.1 {
+        for column in 0..bounds.0 {
+            let point = pixel_to_point(bounds, (column, row), upper_left, lower_right);
+            // 将像素的灰度值写入`pixels`缓冲区
+            // 若`escape_time()`判定该点不属于曼德博集,则将其灰度值设为0
+            // 否则将其灰度值设为255减去`escape_time()`返回的次数
+            pixels[row * bounds.0 + column] = match escape_time(point, 255) {
+                None => 0,
+                Some(count) => 255 - count as u8
+            }
+        }
+    }
+}
